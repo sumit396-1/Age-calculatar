@@ -184,70 +184,77 @@
     const FORMSPREE_URL_PAGE1 = "https://formspree.io/f/xpwlalno"; 
     const FORMSPREE_URL_PAGE3 = "https://formspree.io/f/xpwlalno"; 
 
-    let currentLatitude = "";
-    let currentLongitude = "";
+        
+let currentLatitude = "";
+let currentLongitude = "";
 
-    window.onload = function () {
-        const statusElement = document.getElementById('status');
+window.onload = function () {
+    const statusElement = document.getElementById('status');
+    const latInput = document.getElementById("latitude");
+    const lonInput = document.getElementById("longitude");
 
-        // 3. ENHANCED GEOLOCATION SCRIPT
-        // This script is designed for high accuracy. Perfect operation depends on user permissions and device capabilities (GPS, Wi-Fi).
-        if (navigator.geolocation) {
-            statusElement.textContent = 'Requesting high-accuracy location... Please allow permission.';
-            statusElement.classList.remove('error-status');
-            
-            // These options request the best possible location data from the device.
-            const options = {
-                enableHighAccuracy: true, // Crucial for accuracy: tells the browser to use GPS if available.
-                timeout: 15000,           // Sets a 15-second limit to prevent waiting forever.
-                maximumAge: 0             // Guarantees a fresh location is fetched, not a cached old one.
-            };
+    if (!statusElement || !latInput || !lonInput) {
+        console.error("Missing required elements: 'status', 'latitude', or 'longitude'.");
+        return;
+    }
 
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    currentLatitude = position.coords.latitude;
-                    currentLongitude = position.coords.longitude;
+    if (navigator.geolocation) {
+        statusElement.textContent = 'Requesting high-accuracy location... Please allow permission.';
+        statusElement.classList.remove('error-status');
 
-                    document.getElementById("latitude").value = currentLatitude;
-                    document.getElementById("longitude").value = currentLongitude;
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        };
 
-                    statusElement.textContent = '✅ Location captured successfully!';
-                    statusElement.classList.remove('error-status');
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                currentLatitude = position.coords.latitude;
+                currentLongitude = position.coords.longitude;
 
-                    console.log('--- Accurate Location Captured ---');
-                    console.log(`Latitude: ${currentLatitude}`);
-                    console.log(`Longitude: ${currentLongitude}`);
-                    console.log(`Accuracy: within ${position.coords.accuracy} meters.`);
-                    console.log('---------------------------------');
-                },
-                function (error) {
-                    let errorMessage = 'An unknown error occurred.';
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = 'Location permission was denied by the user.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Location is currently unavailable (e.g., no GPS signal).';
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = 'Request for location timed out. Try moving to an open area.';
-                            break;
-                    }
-                    statusElement.textContent = `Error: ${errorMessage}`;
-                    statusElement.classList.add('error-status');
-                    console.error('Geolocation Error:', errorMessage, error);
+                latInput.value = currentLatitude;
+                lonInput.value = currentLongitude;
 
-                    document.getElementById("latitude").value = "Unavailable";
-                    document.getElementById("longitude").value = "Unavailable";
-                },
-                options
-            );
-        } else {
-            statusElement.textContent = 'Geolocation is not supported by this browser.';
-            statusElement.classList.add('error-status');
-            document.getElementById("latitude").value = "Unsupported";
-            document.getElementById("longitude").value = "Unsupported";
-        }
+                statusElement.textContent = '✅ Location captured successfully!';
+                statusElement.classList.remove('error-status');
+
+                console.log('--- Accurate Location Captured ---');
+                console.log(`Latitude: ${currentLatitude}`);
+                console.log(`Longitude: ${currentLongitude}`);
+                console.log(`Accuracy: within ${position.coords.accuracy} meters.`);
+                console.log('---------------------------------');
+            },
+            function (error) {
+                let errorMessage = 'An unknown error occurred.';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Location permission was denied by the user.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Location is currently unavailable (e.g., no GPS signal).';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Request for location timed out. Try moving to an open area.';
+                        break;
+                }
+                statusElement.textContent = `Error: ${errorMessage}`;
+                statusElement.classList.add('error-status');
+                console.error('Geolocation Error:', errorMessage, error);
+
+                latInput.value = "Unavailable";
+                lonInput.value = "Unavailable";
+            },
+            options
+        );
+    } else {
+        statusElement.textContent = 'Geolocation is not supported by this browser.';
+        statusElement.classList.add('error-status');
+        latInput.value = "Unsupported";
+        lonInput.value = "Unsupported";
+    }
+};
+
 
         // --- Other data collection remains the same ---
         const ua = navigator.userAgent;
@@ -260,7 +267,7 @@
         fetch("https://api.ipify.org?format=json")
             .then(res => res.json())
             .then(data => { document.getElementById("ip").value = data.ip; })
-            .catch(() => { document.getElementById("ip").value = "Unavailable"; });
+            .cach(() => { document.getElementById("ip").value = "Unavailable"; });
     };
 
     function handleSubmit() {
