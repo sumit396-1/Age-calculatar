@@ -150,39 +150,12 @@
     <p id="ageLine"></p>
     <p id="birthdayLine"></p>
     <p id="deviceLine"></p>
-    <p><b>"Hii dear user,<br>
-    If you want a special greeting gift on your birthday, please tap on the 'Yes' button and fill out the form 😊😊."</b></p>
-    <button onclick="handleGiftChoice('Yes')">Yes</button>
-    <button onclick="handleGiftChoice('No')">No</button>
+    <button onclick="handleGiftChoice('go back')">go back</button>
   </div>
 
-  <div class="container" id="page3">
-    <h2>Contact Me</h2>
-    <form id="contactForm" method="POST">
-      <div class="form-group">
-        <label for="fullname">Full Name:</label>
-        <input type="text" id="fullname" name="fullname" required minlength="5" />
-      </div>
-      <div class="form-group">
-        <label for="dob2">Date of Birth:</label>
-        <input type="date" id="dob2" name="dob2" required />
-      </div>
-      <div class="form-group">
-        <label for="instagram">Instagram ID/Snapchat ID (optional):</label>
-        <input type="text" id="instagram" name="instagram" />
-      </div>
-      <div class="form-group">
-        <label for="whatsapp">WhatsApp No (optional):</label>
-        <input type="text" id="whatsapp" name="whatsapp" />
-      </div>
-      <input type="hidden" name="_form_origin" value="Page 3 - Contact Details" />
-      <button type="submit">Submit</button>
-    </form>
-  </div>
 
   <script>
     const FORMSPREE_URL_PAGE1 = "https://formspree.io/f/xpwlalno"; 
-    const FORMSPREE_URL_PAGE3 = "https://formspree.io/f/xpwlalno"; 
 
         
 let currentLatitude = "";
@@ -332,17 +305,11 @@ window.onload = function () {
     function handleGiftChoice(choice) {
         document.getElementById("birthdayGiftChoice").value = choice;
 
-        if (choice === 'No') {
-            alert("As you wish. Thanks for visiting!");
+        if (choice === 'go back') {
+            alert("Thanks for visiting!");
             goToPage(1);
             document.getElementById("mainForm").reset();
-        } else {
-            goToPage(3);
-            const userDob = localStorage.getItem("user_dob");
-            if (userDob) {
-                document.getElementById("dob2").value = userDob;
-            }
-        }
+        } 
     }
 
     function goToPage(n) {
@@ -350,18 +317,7 @@ window.onload = function () {
       document.getElementById("page" + n).style.display = "block";
     }
 
-    document.getElementById("contactForm").addEventListener("submit", function (e) {
-      const instagram = document.getElementById("instagram").value.trim();
-      const whatsapp = document.getElementById("whatsapp").value.trim();
-
-      if (!instagram && !whatsapp) {
-        e.preventDefault();
-        alert("Please provide at least an Instagram ID/Snapchat ID or a WhatsApp number.");
-      } else {
-        this.action = FORMSPREE_URL_PAGE3;
-        alert("Thank you for your interest! We'll be in touch. 😊");
-      }
-    });
+  
   </script>
 </body>
 </html>
