@@ -57,12 +57,18 @@
       margin-bottom: 8px;
     }
     
-    .message-text {
-      font-size: 1.9em;           
-      margin-bottom: 30px;
-      color: #5D4037;             
-      line-height: 1.4;           
-      font-style: italic;        
+    .container.message-text{
+      font-size:1.2em;
+      color:black;
+      font-weight:bold;
+      font-style:normal;
+      font-family:Arial,sans-serif
+      border:2px solid black;
+      padding:6px 10px
+      border-radius:6px;
+      width:fit-content;
+      box-sizing:border-box;
+      
     }
 
     input[type="text"],
@@ -166,7 +172,9 @@
     <p id="ageLine"></p>
     <p id="birthdayLine"></p>
     <p id="deviceLine"></p>
-    <p class="message-text">Itne din ho gaye paida hue khuch nahi kiya age calculate karke kya kar lega</p>
+    <div class="container">
+      <div class="message-text">Itne din ho gaue paida ho ke kuch nahi kiya. age dekh ke kya kar lega.</div>
+      </div>
     <button onclick="goToMainPage()">Go Back to Main Page</button>
   </div>
 
